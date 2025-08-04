@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Taksi Fiyat Tahmin Sistemi</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .form-container {
+            padding: 40px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+            font-size: 0.95rem;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: #f8f9fa;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .submit-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .submit-btn:active {
+            transform: translateY(0);
+        }
+
+        .result {
+            margin-top: 30px;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            display: none;
+        }
+
+        .result.success {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+        }
+
+        .result.error {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+            color: white;
+        }
+
+        .result h3 {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+        }
+
+        .result .price {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .info-box {
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+
+        .info-box h4 {
+            color: #667eea;
+            margin-bottom: 8px;
+        }
+
+        .info-box p {
+            color: #666;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+                border-radius: 15px;
+            }
+            
+            .header {
+                padding: 20px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .form-container {
+                padding: 20px;
+            }
+            
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚕 Taksi Fiyat Tahmin Sistemi</h1>
+            <p>Taksi Fiyatınızı Öğrenelim</p>
+        </div>
+        
+        <div class="form-container">
+            <div class="info-box">
+                <h4>ℹ️ Bilgi</h4>
+                <p>Lütfen aşağıdaki bilgileri doldurarak tahmini taksi fiyatınızı öğrenin. Tüm alanları doldurmak zorunludur.</p>
+            </div>
+
+            <form id="taxiForm">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="tripDistance">Mesafe (km)</label>
+                        <input type="number" id="tripDistance" name="Trip_Distance_km" step="0.1" min="0" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="timeOfDay">Günün Saati</label>
+                        <select id="timeOfDay" name="Time_of_Day" required>
+                            <option value="">Seçiniz</option>
+                            <option value="Morning">Sabah (06:00-12:00)</option>
+                            <option value="Afternoon">Öğleden Sonra (12:00-18:00)</option>
+                            <option value="Evening">Akşam (18:00-24:00)</option>
+                            <option value="Night">Gece (00:00-06:00)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="dayOfWeek">Haftanın Günü</label>
+                        <select id="dayOfWeek" name="Day_of_Week" required>
+                            <option value="">Seçiniz</option>
+                            <option value="Monday">Pazartesi</option>
+                            <option value="Tuesday">Salı</option>
+                            <option value="Wednesday">Çarşamba</option>
+                            <option value="Thursday">Perşembe</option>
+                            <option value="Friday">Cuma</option>
+                            <option value="Saturday">Cumartesi</option>
+                            <option value="Sunday">Pazar</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="passengerCount">Yolcu Sayısı</label>
+                        <input type="number" id="passengerCount" name="Passenger_Count" min="1" max="8" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="trafficConditions">Trafik Durumu</label>
+                        <select id="trafficConditions" name="Traffic_Conditions" required>
+                            <option value="">Seçiniz</option>
+                            <option value="Low">Düşük</option>
+                            <option value="Medium">Orta</option>
+                            <option value="High">Yüksek</option>
+                            <option value="Heavy">Yoğun</option>
+                        </select>
+                    </div>
+                    
+                                         <div class="form-group">
+                         <label for="weather">Hava Durumu</label>
+                         <select id="weather" name="Weather" required>
+                             <option value="">Seçiniz</option>
+                             <option value="Clear">Açık</option>
+                             <option value="Rain">Yağmurlu</option>
+                             <option value="Snow">Karlı</option>
+                         </select>
+                     </div>
+                    
+                    <div class="form-group">
+                        <label for="baseFare">Temel Ücret ($)</label>
+                        <input type="number" id="baseFare" name="Base_Fare" step="0.01" min="0" required>
+                    </div>
+                    
+                    
+                    
+                                                             <div class="form-group">
+                        <label for="perKmRate">Km Başına Ücret ($)</label>
+                        <input type="number" id="perKmRate" name="Per_Km_Rate" step="0.01" min="0" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="perMinuteRate">Dakika Başına Ücret ($)</label>
+                        <input type="number" id="perMinuteRate" name="Per_Minute_Rate" step="0.01" min="0" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="tripDuration">Yolculuk Süresi (Dakika)</label>
+                        <input type="number" id="tripDuration" name="Trip_Duration_Minutes" step="0.1" min="0" required>
+                    </div>
+                </div>
+                
+                <button type="submit" class="submit-btn">
+                    🚕 Fiyat Hesapla
+                </button>
+            </form>
+            
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>Fiyat hesaplanıyor...</p>
+            </div>
+            
+            <div class="result" id="result">
+                <h3>Tahmini Taksi Fiyatı</h3>
+                <div class="price" id="predictedPrice"></div>
+                <p>Bu fiyat tahminidir, gerçek fiyat farklılık gösterebilir.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('taxiForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const data = {};
+            
+            // Form verilerini topla
+            for (let [key, value] of formData.entries()) {
+                data[key] = value;
+            }
+            
+            // Sayısal değerleri dönüştür
+            data.Trip_Distance_km = parseFloat(data.Trip_Distance_km);
+            data.Passenger_Count = parseFloat(data.Passenger_Count);
+            data.Base_Fare = parseFloat(data.Base_Fare);
+            data.Per_Km_Rate = parseFloat(data.Per_Km_Rate);
+            data.Per_Minute_Rate = parseFloat(data.Per_Minute_Rate);
+            data.Trip_Duration_Minutes = parseFloat(data.Trip_Duration_Minutes);
+            
+            // Loading göster
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('result').style.display = 'none';
+            
+            try {
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    if (result.predicted_price !== undefined) {
+                        const price = result.predicted_price;
+                        document.getElementById('predictedPrice').textContent = `$${price.toFixed(2)}`;
+                        document.getElementById('result').className = 'result success';
+                        document.getElementById('result').style.display = 'block';
+                    } else {
+                        document.getElementById('result').className = 'result error';
+                        document.getElementById('result').style.display = 'block';
+                        document.getElementById('predictedPrice').textContent = 'Bir hata oluştu. Lütfen bilgilerinizi kontrol edin.';
+                    }
+                } else {
+                    document.getElementById('result').className = 'result error';
+                    document.getElementById('result').style.display = 'block';
+                    document.getElementById('predictedPrice').textContent = 'Sunucu hatası. Lütfen tekrar deneyin.';
+                }
+            } catch (error) {
+                document.getElementById('result').className = 'result error';
+                document.getElementById('result').style.display = 'block';
+                document.getElementById('predictedPrice').textContent = 'Bir hata oluştu. Lütfen tekrar deneyin.';
+            } finally {
+                document.getElementById('loading').style.display = 'none';
+            }
+        });
+        
+        // Form validasyonu
+        document.querySelectorAll('input, select').forEach(input => {
+            input.addEventListener('input', function() {
+                if (this.checkValidity()) {
+                    this.style.borderColor = '#e1e5e9';
+                } else {
+                    this.style.borderColor = '#fa709a';
+                }
+            });
+        });
+    </script>
+</body>
+</html>
